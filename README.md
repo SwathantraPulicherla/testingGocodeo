@@ -1,22 +1,58 @@
-# C Unit Testing with Ceedling# Testing C Code
+# C Unit Testing with Ceedling, Unity & CMock
 
+This repository demonstrates **fully automated** unit test generation and execution for C code with inter-file dependency mocking.
 
+## 🚀 Features
 
-This repository demonstrates automatic unit test generation and execution for C code using Ceedling, Unity, and CMock.This repository is set up to test C code with automatic test generation, execution, and coverage reporting.
+- **Automatic Test Generation**: Tests are auto-generated for new functions on push
+- **Dependency Mocking**: CMock isolates unit tests from external dependencies
+- **CI/CD Integration**: GitHub Actions runs tests and generates coverage reports
+- **Incremental Testing**: New tests append to existing test files
 
+## 📁 Project Structure
 
+- `src/`: Source C files with functions to test
+- `test/`: Auto-generated test files (created by CI)
+- `include/`: Header files
+- `project.yml`: Ceedling configuration with mocking enabled
+- `generate_tests.py`: Script that parses C code and generates meaningful tests
+- `.github/workflows/ci.yml`: GitHub Actions workflow
 
-## Project Structure## Project
+## 🔧 How It Works
 
-- `src/`: Source C files (e.g., `main.c`)
+1. **Add C Functions**: Write functions in `src/*.c` that may call other modules
+2. **Push to GitHub**: CI detects new functions and auto-generates tests
+3. **Mock Dependencies**: CMock creates stubs for inter-file calls
+4. **Run Tests**: Ceedling executes isolated unit tests
+5. **Coverage Reports**: lcov generates HTML coverage reports
 
-- `test/`: Test files (e.g., `test_main.c`)- `main.c`: Sample C code with an `add` function.
+## 📝 Example
 
-- `include/`: Header files (e.g., `main.h`)- `test_main.c`: Unit tests using Unity framework.
+Add a function like:
+```c
+// src/math_ops.c
+int calculate(int a, int b) {
+    return add(a, b) * 2;  // Calls add from main.c
+}
+```
 
-- `mocks/`: Auto-generated mock files- `unity/`: Unity testing framework for C unit testing.
+CI auto-generates:
+```c
+// test/test_math_ops.c
+void test_calculate(void) {
+    add_ExpectAndReturn(10, 20, 30);  // Mock the dependency
+    TEST_ASSERT_EQUAL(60, calculate(10, 20));  // 30 * 2 = 60
+}
+```
 
-- `project.yml`: Ceedling configuration- `generate_tests.py`: Script to automatically generate test cases for changed functions.
+## 🏃‍♂️ Usage
+
+1. Add your C functions to `src/`
+2. Push to GitHub
+3. Tests run automatically in CI
+4. Check Actions tab for results and coverage
+
+No manual test writing required!
 
 - `.github/workflows/ci.yml`: GitHub Actions for CI
 
