@@ -7,7 +7,6 @@
   :test: [test/**]
   :source: [src/**]
   :include: [include/**]
-  :mocks: [mocks/**]
 
 :cmock:
   :mock_prefix: mock_
