@@ -1,0 +1,24 @@
+:project:
+  :use_mocks: TRUE
+  :use_test_preprocessor: :all
+  :build_root: build/
+
+:paths:
+  :test: [test/**]
+  :source: [src/**]
+  :include: [include/**]
+  :mocks: [mocks/**]
+
+:cmock:
+  :mock_prefix: mock_
+
+:flags:
+  :test:
+    :compile:
+      :*:
+        - -fprofile-arcs
+        - -ftest-coverage
+    :link:
+      :*:
+        - -fprofile-arcs
+        - -ftest-coverage

@@ -1,0 +1,50 @@
+name: C Unit Tests with Ceedling
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'src/**', 'test/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'src/**', 'test/**' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    
+    - name: Setup Ruby
+      uses: actions/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+    
+    - name: Install Ceedling
+      run: gem install ceedling
+    
+    - name: Install lcov and Python
+      run: sudo apt-get install -y lcov python3
+    
+    - name: Detect changed files
+      run: |
+        CHANGED_FILES=$(git diff --name-only HEAD~1 -- 'src/*.c' | tr '\n' ' ')
+        echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+    
+    - name: Generate Tests
+      run: python3 generate_tests.py
+    
+    - name: Run Ceedling Tests
+      run: ceedling test:all
+    
+    - name: Generate Coverage
+      run: |
+        lcov --capture --directory build/test/out/ --output-file coverage.info
+        genhtml coverage.info --output-directory coverage
+    
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.info
