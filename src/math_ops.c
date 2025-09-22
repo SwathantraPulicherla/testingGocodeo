@@ -12,3 +12,9 @@ int simple_math(int x, int y) {
     int result = add(x, y);
     return multiply(result, 3);
 }
+
+int advanced_calc(int val) {
+    // Calls compute from utils.c and multiply from main.c
+    int comp = compute(val);
+    return multiply(comp, 4);
+}
