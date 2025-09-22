@@ -125,12 +125,18 @@ void test_{func_name}(void) {{
 
 if __name__ == "__main__":
     changed_files = os.getenv('CHANGED_FILES', '').split()
+    
+    # If no changed files or script/workflow changed, check all src files
+    if not changed_files or any('generate_tests.py' in f or 'ci.yml' in f for f in changed_files):
+        import glob
+        changed_files = glob.glob('src/*.c')
+    
     tests = []
     includes = ["#include \"unity.h\""]
     existing_tests = set()
     
     for file in changed_files:
-        if file.startswith('src/') and file.endswith('.c'):
+        if file.startswith('src/') and file.endswith('.c') and os.path.exists(file):
             base = os.path.basename(file).replace('.c', '')
             includes.append(f"#include \"{base}.h\"")
             functions = parse_functions(file)
