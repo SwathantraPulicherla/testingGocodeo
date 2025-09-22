@@ -1,6 +1,8 @@
-# C Unit Testing with Ceedling, Unity & CMock
+# testingGocodeo# C Unit Testing with Ceedling, Unity & CMock
 
-This repository demonstrates **fully automated** unit test generation and execution for C code with inter-file dependency mocking.
+
+
+A new repository for testing Go code.This repository demonstrates **fully automated** unit test generation and execution for C code with inter-file dependency mocking.
 
 ## 🚀 Features
 
