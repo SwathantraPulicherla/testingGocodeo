@@ -6,3 +6,9 @@ int complex_calc(int a, int b) {
     int comp = compute(sum);
     return multiply(comp, 2);  // Also calls multiply from main.c
 }
+
+int simple_math(int x, int y) {
+    // Calls add and multiply from main.c
+    int result = add(x, y);
+    return multiply(result, 3);
+}
