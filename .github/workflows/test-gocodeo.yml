@@ -15,3 +15,10 @@ jobs:
 
     - name: GoCodeo CLI
       uses: Soumendraprasad/demo_marketplace@v1
+      with:
+        path: '.'
+        branch: 'main'
+        PAT: ${{ secrets.GITHUB_TOKEN }}
+        EMAIL: 'test@example.com'
+        NAME: 'Test User'
+        secret: 'dummy-secret'
