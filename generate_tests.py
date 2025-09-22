@@ -19,11 +19,75 @@ def parse_functions(file_path):
         calls = re.findall(r'\b(\w+)\s*\(', body)
         # Filter out known functions, assume others are from other files
         dependencies = [call for call in calls if call not in ['printf', 'malloc', 'free'] and call != func_name]
-        functions.append((func_name, param_list, dependencies))
+        functions.append((func_name, param_list, dependencies, body))
     return functions
 
-def generate_test_stub(func_name, params, dependencies):
-    # Generate test call with sample values
+def simulate_function(func_name, body, params):
+    # Simple simulation: assume params are 10,20,... and mocks return fixed values
+    # This is a basic implementation - in practice, you'd need proper AST parsing
+    
+    # Mock return values
+    mock_returns = {
+        'add': 30,      # add(10,20) -> 30
+        'compute': 40,  # compute(30) -> 40  
+        'multiply': None  # depends on args
+    }
+    
+    # Parse simple assignments and return
+    lines = [line.strip() for line in body.split(';') if line.strip()]
+    variables = {}
+    
+    # Set input params
+    if len(params) >= 1:
+        variables[params[0]] = 10
+    if len(params) >= 2:
+        variables[params[1]] = 20
+    
+    for line in lines:
+        if '=' in line and not line.startswith('return'):
+            # Assignment like: int result = add(x, y)
+            var, expr = line.split('=', 1)
+            var = var.strip().split()[-1]  # remove type
+            expr = expr.strip()
+            
+            # Evaluate simple function calls
+            if 'add(' in expr:
+                variables[var] = mock_returns['add']
+            elif 'compute(' in expr:
+                arg = expr.split('(')[1].split(')')[0].strip()
+                if arg in variables:
+                    variables[var] = mock_returns['compute']
+                else:
+                    variables[var] = mock_returns['compute']
+            elif 'multiply(' in expr:
+                args = expr.split('(')[1].split(')')[0]
+                arg1, arg2 = [a.strip() for a in args.split(',')]
+                if arg1 in variables:
+                    val1 = variables[arg1]
+                else:
+                    val1 = int(arg1) if arg1.isdigit() else 10
+                val2 = int(arg2) if arg2.isdigit() else 2
+                variables[var] = val1 * val2  # Simple multiply simulation
+        elif line.startswith('return'):
+            # Return statement
+            expr = line[6:].strip()  # remove 'return'
+            if expr in variables:
+                return variables[expr]
+            elif expr.isdigit():
+                return int(expr)
+            elif 'multiply(' in expr:
+                args = expr.split('(')[1].split(')')[0]
+                arg1, arg2 = [a.strip() for a in args.split(',')]
+                val1 = variables.get(arg1, 10)
+                val2 = int(arg2) if arg2.isdigit() else 2
+                return val1 * val2
+            else:
+                return 42  # fallback
+    
+    return 42  # fallback
+
+def generate_test_stub(func_name, params, dependencies, body):
+    # Generate test call
     if len(params) == 0:
         call = f"{func_name}()"
     elif len(params) == 1:
@@ -33,31 +97,29 @@ def generate_test_stub(func_name, params, dependencies):
     else:
         call = f"{func_name}({', '.join(['10'] * len(params))})"
     
-    # Generate mocks based on dependencies
+    # Generate mocks
     mocks = []
-    expected_result = 42  # Default
-    
     if 'add' in dependencies:
         mocks.append("add_ExpectAndReturn(10, 20, 30);")
-        expected_result = 30
     if 'compute' in dependencies:
         mocks.append("compute_ExpectAndReturn(30, 40);")
-        expected_result = 40
     if 'multiply' in dependencies:
+        # Determine multiply args based on function
         if 'compute' in dependencies:
             mocks.append("multiply_ExpectAndReturn(40, 2, 80);")
-            expected_result = 80
         else:
             mocks.append("multiply_ExpectAndReturn(30, 3, 90);")
-            expected_result = 90
     
-    mock_setup = "\n    ".join(mocks)
+    mock_setup = "\n    ".join(mocks) if mocks else "    // No mocks needed"
+    
+    # Simulate expected result
+    expected = simulate_function(func_name, body, params)
     
     return f"""
 void test_{func_name}(void) {{
     // Mock setup
     {mock_setup}
-    TEST_ASSERT_EQUAL({expected_result}, {call});
+    TEST_ASSERT_EQUAL({expected}, {call});
 }}
 """
 
@@ -70,8 +132,8 @@ if __name__ == "__main__":
             base = os.path.basename(file).replace('.c', '')
             includes.append(f"#include \"{base}.h\"")
             functions = parse_functions(file)
-            for func_name, params, deps in functions:
-                tests.append(generate_test_stub(func_name, params, deps))
+            for func_name, params, deps, body in functions:
+                tests.append(generate_test_stub(func_name, params, deps, body))
                 # Add mock includes based on dependencies
                 if any(d in ['add', 'multiply'] for d in deps):
                     includes.append("#include \"mock_main.h\"")
