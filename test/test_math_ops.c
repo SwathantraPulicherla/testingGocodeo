@@ -4,12 +4,17 @@
 #include "mock_utils.h"
 
 void test_complex_calc(void) {
-    
-    // Mock setup - adjust based on function dependencies
+    // Mock setup
     add_ExpectAndReturn(10, 20, 30);
     compute_ExpectAndReturn(30, 40);
     multiply_ExpectAndReturn(40, 2, 80);
-    TEST_ASSERT_EQUAL(80, complex_calc(10, 20));  // Expected result - adjust manually
+    TEST_ASSERT_EQUAL(80, complex_calc(10, 20));
 }
 
 
+void test_simple_math(void) {
+    // Mock setup
+    add_ExpectAndReturn(10, 20, 30);
+    multiply_ExpectAndReturn(30, 3, 90);
+    TEST_ASSERT_EQUAL(90, simple_math(10, 20));
+}
