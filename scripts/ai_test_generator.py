@@ -86,7 +86,7 @@ def main():
     
     # Configure Gemini
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('models/gemini-1.5-flash')    # Read source code
+model = genai.GenerativeModel('gemini-1.5-flash')    # Read source code
     source_code = read_source_files()
     if not source_code:
         print("No source code found to analyze")
