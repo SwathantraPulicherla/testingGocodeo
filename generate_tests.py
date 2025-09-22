@@ -127,13 +127,18 @@ if __name__ == "__main__":
     changed_files = os.getenv('CHANGED_FILES', '').split()
     tests = []
     includes = ["#include \"unity.h\""]
+    existing_tests = set()
+    
     for file in changed_files:
         if file.startswith('src/') and file.endswith('.c'):
             base = os.path.basename(file).replace('.c', '')
             includes.append(f"#include \"{base}.h\"")
             functions = parse_functions(file)
             for func_name, params, deps, body in functions:
-                tests.append(generate_test_stub(func_name, params, deps, body))
+                test_func_name = f"test_{func_name}"
+                existing_tests.add(test_func_name)
+                tests.append((test_func_name, generate_test_stub(func_name, params, deps, body)))
+                
                 # Add mock includes based on dependencies
                 if any(d in ['add', 'multiply'] for d in deps):
                     includes.append("#include \"mock_main.h\"")
@@ -144,12 +149,37 @@ if __name__ == "__main__":
         # Remove duplicates from includes
         includes = list(dict.fromkeys(includes))
         include_str = "\n".join(includes)
-        test_str = "\n".join(tests)
+        
         # Assume one file, generate test_<basename>.c
         base = os.path.basename(changed_files[0]).replace('.c', '')
         test_file = f'test/test_{base}.c'
-        with open(test_file, 'w') as f:
-            f.write(f"{include_str}\n{test_str}")
-        print(f"Generated {test_file}")
+        
+        # Read existing file if it exists
+        existing_content = ""
+        if os.path.exists(test_file):
+            with open(test_file, 'r') as f:
+                existing_content = f.read()
+        
+        # Parse existing test functions
+        existing_test_funcs = set()
+        for line in existing_content.split('\n'):
+            if line.strip().startswith('void test_') and '(' in line:
+                func_name = line.split('(')[0].replace('void ', '').strip()
+                existing_test_funcs.add(func_name)
+        
+        # Append only new tests
+        new_tests = []
+        for test_func_name, test_content in tests:
+            if test_func_name not in existing_test_funcs:
+                new_tests.append(test_content)
+        
+        if new_tests:
+            with open(test_file, 'a') as f:  # Append mode
+                if not existing_content:  # If file was empty, add includes
+                    f.write(f"{include_str}\n")
+                f.write("\n".join(new_tests))
+            print(f"Appended {len(new_tests)} new test(s) to {test_file}")
+        else:
+            print("No new functions to test")
     else:
         print("No new functions to test")
