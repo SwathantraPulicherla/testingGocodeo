@@ -1,0 +1,17 @@
+name: Test GoCodeo Action
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-gocodeo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: GoCodeo CLI
+      uses: Soumendraprasad/demo_marketplace@v1
