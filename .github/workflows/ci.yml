@@ -3,10 +3,10 @@ name: C Unit Tests with Ceedling
 on:
   push:
     branches: [ main ]
-    paths: [ 'src/**', 'test/**' ]
+    paths: [ 'src/**', 'test/**', 'generate_tests.py', '.github/workflows/ci.yml' ]
   pull_request:
     branches: [ main ]
-    paths: [ 'src/**', 'test/**' ]
+    paths: [ 'src/**', 'test/**', 'generate_tests.py', '.github/workflows/ci.yml' ]
 
 jobs:
   test:
