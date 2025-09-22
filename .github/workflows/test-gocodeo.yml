@@ -1,4 +1,4 @@
-name: Test GoCodeo Action
+name: Test C Code
 
 on:
   push:
@@ -7,18 +7,45 @@ on:
     branches: [ main ]
 
 jobs:
-  test-gocodeo:
+  test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: GoCodeo CLI
-      uses: Soumendraprasad/demo_marketplace@v1
       with:
-        path: '.'
-        branch: 'main'
-        PAT: ${{ secrets.GITHUB_TOKEN }}
-        EMAIL: 'test@example.com'
-        NAME: 'Test User'
-        secret: 'dummy-secret'
+        fetch-depth: 2  # For git diff
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y gcc lcov python3
+
+    - name: Generate tests for changed functions
+      run: python3 generate_tests.py
+
+    - name: Compile with coverage
+      run: |
+        TEST_FILES=$(ls test_*.c 2>/dev/null || echo "")
+        if [ -n "$TEST_FILES" ]; then
+          gcc -fprofile-arcs -ftest-coverage -Iunity/src -o test_main $TEST_FILES unity/src/unity.c
+        fi
+
+    - name: Run tests
+      run: |
+        if [ -f test_main ]; then
+          ./test_main
+        else
+          echo "No tests to run"
+        fi
+
+    - name: Generate coverage report
+      run: |
+        if [ -f test_main ]; then
+          gcov *.c
+          lcov --capture --directory . --output-file coverage.info
+          genhtml coverage.info --output-directory coverage
+        fi
+
+    - name: Upload coverage
+      if: success()
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.info
