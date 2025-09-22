@@ -1,0 +1,64 @@
+name: AI Test Generation
+on:
+  issues:
+    types: [labeled, opened]
+
+jobs:
+  generate-tests:
+    if: contains(github.event.issue.labels.*.name, 'ai-test-generation')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc build-essential
+          
+      - name: Install Python dependencies
+        run: |
+          pip install google-generativeai python-dotenv
+          
+      - name: Create test directory
+        run: |
+          mkdir -p tests/generated
+          
+      - name: Generate tests with AI
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          python scripts/ai_test_generator.py
+          
+      - name: Verify generated tests
+        run: |
+          echo "Generated tests:"
+          ls -la tests/generated/
+          if [ -f tests/generated/generated_tests.c ]; then
+            echo "Test file created successfully"
+            cat tests/generated/generated_tests.c | head -20
+          else
+            echo "No test file generated"
+            exit 1
+          fi
+          
+      - name: Commit and push generated tests
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add tests/generated/
+          git commit -m "Add AI-generated test cases for issue #${{ github.event.issue.number }}" || echo "No changes to commit"
+          git push origin HEAD:${{ github.ref }} || echo "No changes to push"

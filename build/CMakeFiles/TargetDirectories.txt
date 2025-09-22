@@ -1,0 +1,6 @@
+/workspaces/testingGocodeo/build/CMakeFiles/temperature_sensor_lib.dir
+/workspaces/testingGocodeo/build/CMakeFiles/temperature_sensor.dir
+/workspaces/testingGocodeo/build/CMakeFiles/test_temperature_sensor.dir
+/workspaces/testingGocodeo/build/CMakeFiles/test.dir
+/workspaces/testingGocodeo/build/CMakeFiles/edit_cache.dir
+/workspaces/testingGocodeo/build/CMakeFiles/rebuild_cache.dir
