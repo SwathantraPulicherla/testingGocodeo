@@ -32,10 +32,15 @@ jobs:
         with:
           python-version: '3.10'
           
-      - name: Install system dependencies
+      - name: Clone Universal C Test Generator
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc build-essential
+          git clone https://github.com/SwathantraPulicherla/Gemini-Agent-and-api.git test-generator
+          
+      - name: Copy build system and testing framework
+        run: |
+          cp test-generator/Makefile .
+          cp -r test-generator/unity .
+          cp test-generator/CMakeLists.txt .
           
       - name: Install Python dependencies
         run: |
@@ -69,6 +74,14 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add tests/generated/
-          git commit -m "Add AI-generated test cases for issue #${{ github.event.issue.number }}" || echo "No changes to commit"
+          git add tests/ unity/ Makefile CMakeLists.txt
+          git commit -m "Add AI-generated test cases and build system for issue #${{ github.event.issue.number }}" || echo "No changes to commit"
           git push origin HEAD:${{ github.ref }} || echo "No changes to push"
+          
+      - name: Build and test
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          make
+          ./test_temperature_sensor
